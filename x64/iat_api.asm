@@ -112,6 +112,7 @@ finish:
    		                     ; It is the callers responsibility to restore RSP if need be (or alloc more space or align RSP).
 	mov rax,[rax]			 ; Get the address of the desired API
 	call rax				 ; Call the API
+	add rsp,32               ; Deallocate caller's reserved space
 	push rdi				 ; Push back the return address
 	ret						 ; Finito !
   ; We now automagically return to the correct caller...
