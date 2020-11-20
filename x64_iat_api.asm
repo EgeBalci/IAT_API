@@ -68,8 +68,8 @@ get_next_func:              ;
 	cmp dword [rcx],0       ; Check if end of INT 
 	jz next_desc            ; If no INT present, process the next import descriptor
 	mov esi,dword [rcx]     ; Get the RVA of func name hint
-	cmp esi,0x80000000      ; Check if the high order bit is set
-	jns get_next_func       ; If not, there is no function name string :(
+  	btr rsi,0x3F            ; Check if the high order bit is set
+  	jc get_next_func        ; If high order bit is not set resolve with INT entry
 	add rsi,[rsp+24]        ; Add the image base and get the address of function name hint
 	add rsi,2               ; Move 2 bytes forward to asci function name
 	; now ecx returns to its regularly scheduled counter duties
