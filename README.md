@@ -2,7 +2,7 @@
 Assembly block for finding and calling the windows API functions inside import address table(IAT) of the running PE file.
 
 
-Design of the block is inspired by Stephen Fewer's [block_api](https://github.com/rapid7/metasploit-framework/blob/master/external/source/shellcode/windows/x86/src/block/block_api.asm) and Josh Pitts's 2017 [DEFCON](https://github.com/secretsquirrel/fido/blob/master/Defcon_25_2017.pdf) talk. iat_api finds the addresses of API functions by parsing the `_IMAGE_IMPORT_DESCRIPTOR` structure entries inside the import table of the PE file. It first calculates the ROR(13) hash of the (module name + function name) and compares with the hash passed to block. If the hash matches it calls the function with the parameters passed to block.
+Design of the block is inspired by Stephen Fewer's [block_api](https://github.com/rapid7/metasploit-framework/blob/master/external/source/shellcode/windows/x86/src/block/block_api.asm) and Josh Pitts's 2017 [DEFCON](https://github.com/secretsquirrel/fido/blob/master/Defcon_25_2017.pdf) talk. iat_api finds the addresses of API functions by parsing the `_IMAGE_IMPORT_DESCRIPTOR` structure entries inside the import table of the PE file. It uses the CRC32 calculation routine from [CRC32_API]() and calculates the CRC32(polynomial 11EDC6F41H) value of the (module name + function name) and compares with the value passed to block. If the value matches it calls the function with the parameters passed to block.
 
 [![Description](https://github.com/EgeBalci/iat_api/raw/master/img/flow.png)]()
 
