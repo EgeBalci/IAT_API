@@ -1,21 +1,20 @@
 ;-----------------------------------------------------------------------------;
 ; Author: Ege Balcı <ege.balci[at]invictuseurope[dot]com>
-; Compatible: Windows 10/8.1/8/7/2008/Vista/2003/XP/2000/NT4
-; Version: 1.0 (25 January 2018)
-; Size: 177 bytes
+; Version: 1.1 (29 April 2023)
+; Architecture: x86
+; Size: 172 bytes
 ;-----------------------------------------------------------------------------;
 
 ; This block locates addresses from import address table with given ror(13) hash value.
-; Design is inpired from Stephen Fewer's hash api.
+; Design is inspired from Stephen Fewer's hash api.
 
 [BITS 32]
 
-; Input: The hash of the API to call and all its parameters must be pushed onto stack.
-; Output: The return value from the API call will be in EAX.
-; Clobbers: EAX, EBX, ECX and EDX (NOT !! the normal stdcall calling convention because EBX is clobbered)
-; Un-Clobbered: ESI, EDI, ESP and EBP can be expected to remain un-clobbered.
+; Input: The hash of the module+function name in R10D 
+; Output: The address of the function will be in RAX.
+; Clobbers: EAX
+; Un-Clobbered: EBX, ECX, EDX, ESI, EDI, ESP and EBP can be expected to remain un-clobbered.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
-; Note: This function is unable to call forwarded exports.
 
 api_call:
 	pushad                  ; We preserve all the registers for the caller, bar EAX and ECX.
@@ -90,11 +89,8 @@ finish:
 	mov [esp+0x2C],eax      ; Overwrite the old EAX value with the desired api address for the upcoming popad
 	add esp,0x10            ; Deallocate saved module hash, import descriptor address and import table address
 	popad                   ; Restore all of the callers registers, bar EAX, ECX and EDX which are clobbered
-	pop ebx                 ; Pop off the origional return address our caller will have pushed
-	pop edx                 ; Pop off the hash value our caller will have pushed
-	push ebx                ; Push back the return address
 	mov eax,[eax]           ; Get the address of the desired API
-	jmp eax                 ; Jump to target function
+	ret                     ; Return to caller with the function address inside EAX
 	; We now automagically return to the correct caller...
 not_found:
 	add esp,0x0F            ; Fix the stack

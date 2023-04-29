@@ -1,28 +1,29 @@
 ;-----------------------------------------------------------------------------;
 ; Author: Ege Balcı (ege.balci[at]invictuseurope[dot]com)
-; Compatible: Windows 7, 2003
+; Version: 1.1 (29 April 2023)
 ; Architecture: x64
-; Size: 200 bytes
+; Size: 218 bytes
 ;-----------------------------------------------------------------------------;
+
+; This block locates addresses from import address table with given ror(13) hash value.
+; Design is inspired from Stephen Fewer's hash api.
 
 [BITS 64]
 
 ; Windows x64 calling convention:
 ; http://msdn.microsoft.com/en-us/library/9b372w95.aspx
 
-; Input: The hash of the API to call in r10d and all its parameters (rcx/rdx/r8/r9/any stack params)
-; Output: The return value from the API call will be in RAX.
-; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11
-; Un-Clobbered: RBX, RSI, RDI, RBP, R12, R13, R14, R15.
-;               RSP will be off by -40 hence the 'add rsp, 40' after each call to this function
+; Input: The hash of the module+function name in R10D 
+; Output: The address of the function will be in RAX.
+; Clobbers: R10
+; Un-Clobbered: RAX, RCX, RDX, R8, R9, RBX, RSI, RDI, RBP, R12, R13, R14, R15.
 ; Note: This function assumes the direction flag has allready been cleared via a CLD instruction.
-; Note: This function is unable to call forwarded exports.
 
 api_call:
-	push r9                 ; Save the 4th parameter
-	push r8                 ; Save the 3rd parameter
-	push rdx                ; Save the 2nd parameter
-	push rcx                ; Save the 1st parameter
+	push r9                 ; Save R9
+	push r8                 ; Save R8
+	push rdx                ; Save RDX
+	push rcx                ; Save RCX
 	push rsi                ; Save RSI
 	xor rdx,rdx             ; Zero rdx
  	mov rdx,[gs:rdx+96]     ; Get a pointer to the PEB
@@ -98,17 +99,13 @@ finish:
 	pop r8                  ; Clear off the import table address of last module
 	pop r8                  ; Clear off the image base address of last module
 	pop rsi                 ; Restore RSI
-	pop rcx                 ; Restore the 1st parameter
-	pop rdx                 ; Restore the 2nd parameter
-	pop r8                  ; Restore the 3rd parameter
-	pop r9                  ; Restore the 4th parameter
-	pop r10                 ; Pop off the return address
-	sub rsp,32              ; reserve space for the four register params (4 * sizeof(QWORD) = 32)
-                            ; It is the callers responsibility to restore RSP if need be (or alloc more space or align RSP).
-	push r10                ; Push back the return address
+	pop rcx                 ; Restore the RCX
+	pop rdx                 ; Restore the RDX
+	pop r8                  ; Restore the R8
+	pop r9                  ; Restore the R9
 	mov rax,[rax]           ; Get the address of the desired API
-	jmp rax                 ; Jump to target function
-	; We now automagically return to the correct caller...
+	ret                     ; Return to caller with the function address inside RAX
+	; We now automatically return to the correct caller...
 not_found:
 	add rsp,72              ; Clean out the stack
 	ret                     ; Return to caller
