@@ -19,22 +19,20 @@ def unicode( string, uppercase=True ):
 #=============================================================================#
 def hash( module, function, bits=13, print_hash=True ):
   crc32_func = crcmod.mkCrcFun(0x11EDC6F41, initCrc=0, xorOut=0)
-  h = crc32_func(unicode(module)+function+"\x00")
-  print "[+] 0x%08X = %s!%s" % ( h, module.lower(), function )
+  h = crc32_func((unicode(module)+function+"\x00").encode('utf-8'))
+  print("[+] 0x%08X = %s!%s" % ( h, module.lower(), function ))
   return h
 
 #=============================================================================#
 def main( argv=None ):
   if not argv:
     argv = sys.argv
-  try:
-    if len( argv ) == 1:
-      print "Usage: crc32_hash.py [<module.dll> <function>]"
-    else:
-      print "[+] Ran on %s\n" % (  time.asctime( time.localtime() ) )
-      hash( argv[1], argv[2] )
-  except Exception, e:
-    print "[-] ", e
+
+  if len( argv ) == 1:
+    print("Usage: crc32_hash.py [<module.dll> <function>]")
+  else:
+    hash( argv[1], argv[2] )
+
 #=============================================================================#
 if __name__ == "__main__":
   main()
